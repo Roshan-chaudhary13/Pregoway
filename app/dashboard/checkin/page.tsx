@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, ChevronLeft, Mic, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -104,6 +104,24 @@ export default function CheckInPage() {
     }
   };
 
+  useEffect(() => {
+    async function checkDailyStatus() {
+      if (!authUser) return;
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('daily_checkins')
+        .select('id')
+        .eq('user_id', authUser.id)
+        .eq('date', today)
+        .single();
+      
+      if (data) {
+        setStep(questions.length + 1); // Skip to success if already done
+      }
+    }
+    checkDailyStatus();
+  }, [authUser]);
+
   // Intro Screen
   if (step === 0) {
     return (
@@ -128,7 +146,12 @@ export default function CheckInPage() {
           >
             Let's Begin
           </button>
-          <button className="mt-4 text-gray-400 text-sm font-medium">Skip for now</button>
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="mt-4 text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"
+          >
+            Skip for now
+          </button>
         </div>
       </div>
     );
@@ -141,8 +164,14 @@ export default function CheckInPage() {
         <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
           <Check className="w-12 h-12" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">All Done!</h2>
-        <p className="text-gray-500">Your health data has been updated.</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">All Done for Today!</h2>
+        <p className="text-gray-500 text-center mb-8">Your health data has been updated. Come back tomorrow!</p>
+        <button 
+           onClick={() => router.push('/dashboard')}
+           className="px-6 py-3 bg-white text-gray-900 font-semibold rounded-xl shadow-sm border border-gray-200"
+        >
+          Return to Dashboard
+        </button>
       </div>
     )
   }
@@ -258,7 +287,7 @@ export default function CheckInPage() {
         </button>
         <button
           onClick={handleNext}
-          disabled={!answers[currentQuestion.id] && currentQuestion.type !== 'multi'} // loose validation
+          disabled={answers[currentQuestion.id] === undefined && currentQuestion.type !== 'multi'}
           className="flex-1 bg-brand-900 disabled:bg-gray-200 disabled:text-gray-400 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-colors"
         >
           Next <ChevronRight className="w-5 h-5" />
