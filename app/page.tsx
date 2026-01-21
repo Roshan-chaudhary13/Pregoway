@@ -1,28 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, LogOut, ArrowRight } from "lucide-react";
+import { Heart } from "lucide-react";
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 
-export default function LandingPage() {
-  const { user, signOut, loading } = useAuth();
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+function LandingContent() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    async function checkProfile() {
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
-        setHasProfile(!!data);
-      }
+    // If returning from email verification (Magic Link)
+    const code = searchParams.get('code');
+    if (code) {
+      router.push(`/auth/login?${searchParams.toString()}`);
+      return;
     }
-    checkProfile();
-  }, [user]);
+
+    // If already logged in
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, searchParams, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-brand-50 p-4 relative overflow-hidden">
@@ -54,43 +55,19 @@ export default function LandingPage() {
 
         {/* Action Buttons */}
         <div className="w-full space-y-4 pt-8">
-          {!loading && user ? (
-            <div className="space-y-4">
-              <Link
-                href={hasProfile ? "/dashboard" : "/onboarding/profile"}
-                className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-lg"
-              >
-                <span>{hasProfile ? "Go to Dashboard" : "Complete Profile"}</span>
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-sm text-gray-500">Signed in as <span className="font-semibold text-gray-900">{user.email}</span></span>
-                <button
-                  onClick={() => signOut()}
-                  className="flex items-center gap-2 text-brand-600 font-semibold hover:underline text-sm"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign out to switch account</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <Link
-                href="/onboarding/language"
-                className="w-full flex items-center justify-center py-4 px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-lg"
-              >
-                Get Started
-              </Link>
+          <Link
+            href="/auth/signup"
+            className="w-full flex items-center justify-center py-4 px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-lg"
+          >
+            Get Started
+          </Link>
 
-              <div className="flex justify-center items-center gap-2 text-sm text-gray-500">
-                <span>Already have an account?</span>
-                <Link href="/auth" className="text-brand-600 font-semibold hover:underline">
-                  Login
-                </Link>
-              </div>
-            </>
-          )}
+          <div className="flex justify-center items-center gap-2 text-sm text-gray-500">
+            <span>Already have an account?</span>
+            <Link href="/auth/login" className="text-brand-600 font-semibold hover:underline">
+              Login
+            </Link>
+          </div>
         </div>
 
         {/* Language Preview */}
@@ -102,4 +79,12 @@ export default function LandingPage() {
       </div>
     </div>
   );
+}
+
+export default function LandingPage() {
+  return (
+    <Suspense fallback={null}>
+      <LandingContent />
+    </Suspense>
+  )
 }

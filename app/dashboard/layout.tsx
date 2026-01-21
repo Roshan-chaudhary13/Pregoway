@@ -1,24 +1,65 @@
+"use client";
+
 import { Home, ClipboardCheck, Calendar, FileText, User } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [checkingProfile, setCheckingProfile] = useState(true);
+
+  useEffect(() => {
+    async function checkOnboarding() {
+      if (loading) return;
+
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('lmp')
+        .eq('id', user.id)
+        .single();
+
+      // If no profile found or LMP not set, redirect to onboarding
+      if (error || !data || !data.lmp) {
+        router.push('/onboarding/profile');
+      } else {
+        setCheckingProfile(false);
+      }
+    }
+
+    checkOnboarding();
+  }, [user, loading, router, pathname]);
+
+  if (loading || checkingProfile) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-400">Loading...</div>;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 pb-20">
       <main className="flex-1">
         {children}
       </main>
-      
+
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50">
-        <NavLink href="/dashboard" icon={<Home className="w-6 h-6" />} label="Home" active />
-        <NavLink href="/dashboard/checkin" icon={<ClipboardCheck className="w-6 h-6" />} label="Check-In" />
-        <NavLink href="/dashboard/timeline" icon={<Calendar className="w-6 h-6" />} label="Timeline" />
-        <NavLink href="/dashboard/vault" icon={<FileText className="w-6 h-6" />} label="Docs" />
-        <NavLink href="/dashboard/more" icon={<User className="w-6 h-6" />} label="More" />
+        <NavLink href="/dashboard" icon={<Home className="w-6 h-6" />} label="Home" active={pathname === '/dashboard'} />
+        <NavLink href="/dashboard/checkin" icon={<ClipboardCheck className="w-6 h-6" />} label="Check-In" active={pathname.startsWith('/dashboard/checkin')} />
+        <NavLink href="/dashboard/timeline" icon={<Calendar className="w-6 h-6" />} label="Timeline" active={pathname.startsWith('/dashboard/timeline')} />
+        <NavLink href="/dashboard/vault" icon={<FileText className="w-6 h-6" />} label="Docs" active={pathname.startsWith('/dashboard/vault')} />
+        <NavLink href="/dashboard/more" icon={<User className="w-6 h-6" />} label="More" active={pathname.startsWith('/dashboard/more')} />
       </div>
     </div>
   );

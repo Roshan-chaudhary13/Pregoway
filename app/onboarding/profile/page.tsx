@@ -131,7 +131,11 @@ export default function ProfilePage() {
 
         <button
           onClick={async () => {
-            if (!user) return;
+            if (!user) {
+              alert("No user session found. Please log in again.");
+              router.push('/auth/login');
+              return;
+            }
             setLoading(true);
             try {
               const { error } = await supabase.from('profiles').upsert({

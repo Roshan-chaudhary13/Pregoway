@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { Client } = require('pg');
 
 // Manual Env Parsing
 const envPath = path.resolve(__dirname, '.env.local');
@@ -85,6 +86,7 @@ CREATE TABLE IF NOT EXISTS public.risk_logs (
 ALTER TABLE public.risk_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own risk logs" ON public.risk_logs FOR SELECT USING (auth.uid() = user_id);
 
+
 -- Create Health Timeline Table (for Appointments & Milestones)
 CREATE TABLE IF NOT EXISTS public.health_timeline (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -101,6 +103,23 @@ ALTER TABLE public.health_timeline ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own timeline" ON public.health_timeline FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own timeline" ON public.health_timeline FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own timeline" ON public.health_timeline FOR UPDATE USING (auth.uid() = user_id);
+
+-- AUTOMATIC PROFILE CREATION TRIGGER
+-- This ensures a profile row exists as soon as a user signs up via Auth
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, name, created_at)
+  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name', now())
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 `;
 
 async function run() {

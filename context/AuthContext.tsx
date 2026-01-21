@@ -2,20 +2,24 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
 
 type AuthContextType = {
   user: User | null;
+  session: Session | null;
   loading: boolean;
-  signIn: (email: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ data: { user: User | null; session: Session | null }; error: any }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ data: { user: User | null; session: Session | null }; error: any }>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
   loading: true,
-  signIn: async () => { },
+  signIn: async () => ({ data: { user: null, session: null }, error: null }),
+  signUp: async () => ({ data: { user: null, session: null }, error: null }),
   signOut: async () => { },
 });
 
@@ -23,80 +27,56 @@ export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const handleRedirect = async (session: any) => {
-      if (!session) return;
-
-      const currentPath = window.location.pathname;
-      const publicPaths = ['/auth', '/onboarding/language'];
-
-      if (publicPaths.includes(currentPath)) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          router.push('/dashboard');
-        } else {
-          router.push('/onboarding/profile');
-        }
-      }
-    };
-
-    // Check active session on mount
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    // 1. Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      if (session) handleRedirect(session);
-    };
-
-    checkUser();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-
-      if (event === 'SIGNED_IN' && session) {
-        handleRedirect(session);
-      }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router]);
+    // 2. Listen for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  const signIn = async (email: string) => {
-    setLoading(true);
-    // For production, we'll use Magic Link (Email OTP)
-    const { error } = await supabase.auth.signInWithOtp({
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: window.location.origin,
-      }
+      password,
     });
+    return { data, error };
+  };
 
-    if (error) {
-      setLoading(false);
-      throw error;
-    }
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata,
+      },
+    });
+    return { data, error };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    router.push('/auth');
+    router.push("/auth/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

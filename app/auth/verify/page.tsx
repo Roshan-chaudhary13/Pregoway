@@ -39,7 +39,7 @@ function VerifyContent() {
       if (error) {
         alert(error.message);
       } else {
-        router.push("/onboarding/profile");
+        router.push("/auth/login");
       }
     } catch (err) {
       alert("Verification failed");
