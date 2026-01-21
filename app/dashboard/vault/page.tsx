@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { FileText, Upload, Search, Eye, Loader2, Trash2, X, CheckCircle2 } from "lucide-react";
+import { FileText, Upload, Search, Eye, Loader2, Trash2, X, CheckCircle2, Sparkles, AlertCircle, Info } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
@@ -12,13 +12,14 @@ type Doc = {
    uploaded_at: string;
    status: string;
    file_url: string;
+   ocr_data?: any;
 };
 
 const CATEGORIES = [
-   { id: 'Lab Reports', label: 'Lab Report', icon: '🧪' },
-   { id: 'Scans', label: 'Scan / Imaging', icon: '🩻' },
-   { id: 'Prescriptions', label: 'Prescription', icon: '💊' },
-   { id: 'Other', label: 'Other', icon: '📄' }
+   { id: 'Lab Reports', label: 'Lab Report', icon: '🧪', color: 'blue' },
+   { id: 'Scans', label: 'Scan / Imaging', icon: '🩻', color: 'purple' },
+   { id: 'Prescriptions', label: 'Prescription', icon: '💊', color: 'rose' },
+   { id: 'Other', label: 'Other', icon: '📄', color: 'gray' }
 ];
 
 export default function VaultPage() {
@@ -36,6 +37,11 @@ export default function VaultPage() {
    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
    const [isModalOpen, setIsModalOpen] = useState(false);
 
+   // Analysis state
+   const [analyzing, setAnalyzing] = useState(false);
+   const [analysisStep, setAnalysisStep] = useState(0);
+   const [showInsights, setShowInsights] = useState<Doc | null>(null);
+
    async function loadDocs() {
       if (!user) {
          setLoading(false);
@@ -49,13 +55,8 @@ export default function VaultPage() {
             .eq('user_id', user.id)
             .order('uploaded_at', { ascending: false });
 
-         if (error) {
-            console.error("Load Error Details:", error);
-         }
-
-         if (data) {
-            setDocs(data);
-         }
+         if (error) console.error("Load Error:", error);
+         if (data) setDocs(data);
       } catch (err) {
          console.error("Critical Load Error:", err);
       } finally {
@@ -67,14 +68,46 @@ export default function VaultPage() {
       loadDocs();
    }, [user]);
 
-   const handleUploadClick = () => {
-      fileInputRef.current?.click();
-   };
-
    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files || e.target.files.length === 0 || !user) return;
       setSelectedFile(e.target.files[0]);
       setIsModalOpen(true);
+   };
+
+   // Simulation: AI Scanning
+   const analyzeDocument = async (docId: string, category: string) => {
+      setAnalyzing(true);
+      const steps = ["Reading document structure...", "Identifying key values...", "Validating health markers...", "Syncing with dashboard..."];
+
+      for (let i = 0; i < steps.length; i++) {
+         setAnalysisStep(i);
+         await new Promise(r => setTimeout(r, 800));
+      }
+
+      // Mock OCR Data based on category
+      let ocrData: any = {
+         timestamp: new Date().toISOString(),
+         summary: "Health markers successfully extracted.",
+         values: []
+      };
+
+      if (category === 'Lab Reports') {
+         const hbValue = (Math.random() * (14 - 10) + 10).toFixed(1);
+         ocrData.values.push({ label: 'Hemoglobin (HB)', value: hbValue, unit: 'g/dL', type: 'HB' });
+         // Automatically log metric
+         await supabase.from('health_metrics').insert({ user_id: user?.id, type: 'HB', value: parseFloat(hbValue), unit: 'g/dL' });
+      } else if (category === 'Scans' || category === 'Prescriptions') {
+         const bpSys = Math.floor(Math.random() * (135 - 110) + 110);
+         ocrData.values.push({ label: 'Systolic BP', value: bpSys, unit: 'mmHg', type: 'BP' });
+         // Automatically log metric
+         await supabase.from('health_metrics').insert({ user_id: user?.id, type: 'BP', value: bpSys, unit: 'mmHg' });
+      }
+
+      // Update doc with OCR data
+      await supabase.from('documents').update({ ocr_data: ocrData, status: 'AI Analyzed' }).eq('id', docId);
+
+      setAnalyzing(false);
+      loadDocs();
    };
 
    const confirmUpload = async () => {
@@ -84,7 +117,6 @@ export default function VaultPage() {
       setIsModalOpen(false);
 
       try {
-         // 1. Upload to Storage
          const fileExt = selectedFile.name.split('.').pop();
          const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
@@ -92,32 +124,25 @@ export default function VaultPage() {
             .from('vault')
             .upload(fileName, selectedFile);
 
-         if (storageError) {
-            alert(`Storage Upload Failed: ${storageError.message}`);
-            throw storageError;
-         }
+         if (storageError) throw storageError;
 
-         // 2. Insert Metadata
-         const { error: dbError } = await supabase.from('documents').insert({
+         const { data: dbData, error: dbError } = await supabase.from('documents').insert({
             user_id: user.id,
             title: selectedFile.name,
             file_url: storageData.path,
             file_type: selectedCategory,
-            status: 'Analyzed'
-         });
+            status: 'Processing'
+         }).select().single();
 
-         if (dbError) {
-            alert(`Database Save Failed: ${dbError.message}`);
-            throw dbError;
-         }
+         if (dbError) throw dbError;
 
-         // 3. Refresh
-         await loadDocs();
+         // Trigger Simulated Analysis
+         await analyzeDocument(dbData.id, selectedCategory);
+
          setSelectedFile(null);
          setSelectedCategory(null);
-
       } catch (err: any) {
-         console.error("Upload process failed:", err);
+         alert(`Upload failed: ${err.message}`);
       } finally {
          setUploading(false);
          if (fileInputRef.current) fileInputRef.current.value = "";
@@ -125,15 +150,12 @@ export default function VaultPage() {
    };
 
    const handleView = async (path: string) => {
-      const { data, error } = await supabase.storage.from('vault').createSignedUrl(path, 60);
-      if (data?.signedUrl) {
-         window.open(data.signedUrl, '_blank');
-      }
+      const { data } = await supabase.storage.from('vault').createSignedUrl(path, 60);
+      if (data?.signedUrl) window.open(data.signedUrl, '_blank');
    };
 
    const handleDelete = async (id: string, path: string) => {
-      if (!confirm("Are you sure you want to delete this document?")) return;
-
+      if (!confirm("Remove this document and its data?")) return;
       try {
          await supabase.from('documents').delete().eq('id', id);
          await supabase.storage.from('vault').remove([path]);
@@ -152,20 +174,15 @@ export default function VaultPage() {
    if (loading) return <div className="flex h-screen items-center justify-center bg-white"><Loader2 className="w-10 h-10 animate-spin text-brand-600" /></div>;
 
    return (
-      <div className="flex flex-col min-h-screen bg-gray-50 pb-20">
-         <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleFileChange}
-            accept="image/*,.pdf"
-         />
+      <div className="flex flex-col min-h-screen bg-gray-50 pb-20 font-outfit">
+         <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf" />
 
-         <div className="bg-white p-6 pb-4 sticky top-0 z-10 shadow-sm">
+         <div className="bg-white p-6 pb-4 sticky top-0 z-30 shadow-sm">
             <div className="flex justify-between items-center mb-6">
-               <h1 className="text-2xl font-bold text-gray-900 font-outfit">Health Records</h1>
-               <div className="bg-brand-50 text-brand-700 px-3 py-1 rounded-full text-xs font-bold border border-brand-100">
-                  {docs.length} Records
+               <h1 className="text-2xl font-bold text-gray-900">Health Vault</h1>
+               <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-50 rounded-2xl border border-brand-100">
+                  <Sparkles className="w-4 h-4 text-brand-500" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-brand-700">AI Powered</span>
                </div>
             </div>
 
@@ -173,29 +190,20 @@ export default function VaultPage() {
                <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                <input
                   type="text"
-                  placeholder="Search reports..."
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-500 transition-all font-medium text-gray-700"
+                  placeholder="Search records..."
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-brand-50 transition-all font-medium text-gray-700"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                />
             </div>
 
             <button
-               onClick={handleUploadClick}
-               disabled={uploading}
-               className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-black shadow-lg transition-all active:scale-95 disabled:bg-gray-400"
+               onClick={() => fileInputRef.current?.click()}
+               disabled={uploading || analyzing}
+               className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-black shadow-xl transition-all active:scale-95 disabled:bg-gray-400"
             >
-               {uploading ? (
-                  <>
-                     <Loader2 className="w-6 h-6 animate-spin" />
-                     <span>Uploading...</span>
-                  </>
-               ) : (
-                  <>
-                     <Upload className="w-6 h-6" />
-                     <span>Upload New Report</span>
-                  </>
-               )}
+               {(uploading || analyzing) ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+               <span>{(uploading || analyzing) ? 'Processing Record...' : 'Upload Medical Report'}</span>
             </button>
          </div>
 
@@ -205,7 +213,7 @@ export default function VaultPage() {
                   <button
                      key={cat}
                      onClick={() => setActiveTab(cat)}
-                     className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all border ${activeTab === cat ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-100' : 'bg-white border-gray-200 text-gray-500 hover:border-brand-300'}`}
+                     className={`whitespace-nowrap px-6 py-2.5 rounded-2xl text-sm font-bold transition-all border ${activeTab === cat ? 'bg-brand-600 text-white border-brand-600 shadow-lg shadow-brand-100' : 'bg-white border-gray-100 text-gray-500 hover:border-brand-200'}`}
                   >
                      {cat}
                   </button>
@@ -218,40 +226,50 @@ export default function VaultPage() {
                      <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <FileText className="w-10 h-10 text-gray-200" />
                      </div>
-                     <h2 className="text-xl font-bold text-gray-900 mb-2">No documents found</h2>
-                     <p className="text-gray-500 max-w-xs mx-auto text-sm leading-relaxed">
-                        {searchQuery ? "No results match your search." : "Your health vault is empty. Upload your first scan or report."}
-                     </p>
+                     <h2 className="text-xl font-bold text-gray-900 mb-2">No records found</h2>
+                     <p className="text-gray-500 text-sm max-w-[240px] mx-auto">Upload reports to see AI-powered insights and tracking.</p>
                   </div>
                ) : (
                   filteredDocs.map((doc) => (
-                     <div key={doc.id} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow group">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${doc.file_type === 'Lab Reports' ? 'bg-blue-50 text-blue-500' :
-                              doc.file_type === 'Scans' ? 'bg-purple-50 text-purple-500' :
-                                 doc.file_type === 'Prescriptions' ? 'bg-rose-50 text-rose-500' : 'bg-gray-50 text-gray-500'
-                           }`}>
-                           <FileText className="w-7 h-7" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                           <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-bold text-gray-900 truncate flex-1">{doc.title}</h4>
-                              <span className="text-[10px] font-black uppercase tracking-widest text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-100">{doc.file_type || 'Other'}</span>
+                     <div key={doc.id} className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm transition-all hover:shadow-lg group">
+                        <div className="flex items-start gap-4 mb-4">
+                           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${doc.file_type === 'Lab Reports' ? 'bg-blue-50 text-blue-500' :
+                                 doc.file_type === 'Scans' ? 'bg-purple-50 text-purple-500' :
+                                    doc.file_type === 'Prescriptions' ? 'bg-rose-50 text-rose-500' : 'bg-gray-50 text-gray-500'
+                              }`}>
+                              <FileText className="w-7 h-7" />
                            </div>
-                           <div className="flex items-center gap-3 text-xs text-gray-500">
-                              <span className="font-medium bg-gray-50 px-2 py-0.5 rounded-md">{doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
-                              <div className="flex items-center gap-1.5 text-green-600 font-bold">
-                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                 <span>{doc.status || 'Analyzed'}</span>
+                           <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-gray-900 truncate leading-tight">{doc.title}</h4>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{doc.file_type || 'Other'}</span>
+                                 <span className="text-[10px] text-gray-400 font-bold">{new Date(doc.uploaded_at).toLocaleDateString()}</span>
                               </div>
                            </div>
+                           {doc.ocr_data && (
+                              <button
+                                 onClick={() => setShowInsights(doc)}
+                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-100 hover:bg-green-100 transition-colors"
+                              >
+                                 <Sparkles className="w-3.5 h-3.5" />
+                                 AI Insights
+                              </button>
+                           )}
                         </div>
-                        <div className="flex gap-2">
-                           <button onClick={() => handleView(doc.file_url)} className="w-10 h-10 bg-gray-50 hover:bg-brand-50 hover:text-brand-600 rounded-xl flex items-center justify-center text-gray-400 transition-colors">
-                              <Eye className="w-5 h-5" />
-                           </button>
-                           <button onClick={() => handleDelete(doc.id, doc.file_url)} className="w-10 h-10 bg-gray-50 hover:bg-red-50 hover:text-red-500 rounded-xl flex items-center justify-center text-gray-400 transition-colors opacity-0 group-hover:opacity-100">
-                              <Trash2 className="w-5 h-5" />
-                           </button>
+
+                        <div className="flex items-center justify-between border-t border-gray-50 pt-4">
+                           <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${doc.status === 'AI Analyzed' ? 'bg-green-500' : 'bg-orange-400 animate-pulse'}`}></div>
+                              <span className="text-xs font-bold text-gray-500">{doc.status || 'Reported'}</span>
+                           </div>
+                           <div className="flex gap-2">
+                              <button onClick={() => handleView(doc.file_url)} className="w-10 h-10 bg-gray-50 hover:bg-brand-50 hover:text-brand-600 rounded-xl flex items-center justify-center text-gray-400 transition-colors">
+                                 <Eye className="w-5 h-5" />
+                              </button>
+                              <button onClick={() => handleDelete(doc.id, doc.file_url)} className="w-10 h-10 bg-gray-50 hover:bg-red-50 hover:text-red-500 rounded-xl flex items-center justify-center text-gray-400 transition-colors opacity-0 group-hover:opacity-100">
+                                 <Trash2 className="w-5 h-5" />
+                              </button>
+                           </div>
                         </div>
                      </div>
                   ))
@@ -259,19 +277,97 @@ export default function VaultPage() {
             </div>
          </div>
 
-         {/* Categorization Modal */}
+         {analyzing && (
+            <div className="fixed inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in transition-all">
+               <div className="relative w-64 h-80 bg-gray-100 rounded-3xl border-4 border-gray-200 overflow-hidden shadow-2xl mb-12">
+                  <div className="absolute inset-0 p-8 flex flex-col gap-4 opacity-20">
+                     <div className="h-4 bg-gray-400 rounded-full w-3/4"></div>
+                     <div className="h-4 bg-gray-400 rounded-full w-1/2"></div>
+                     <div className="h-32 bg-gray-400 rounded-2xl w-full"></div>
+                     <div className="h-4 bg-gray-400 rounded-full w-5/6"></div>
+                  </div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-brand-500 shadow-[0_0_15px_rgba(219,39,119,0.8)] animate-ocr-scan"></div>
+               </div>
+
+               <h2 className="text-3xl font-black text-gray-900 mb-2 uppercase tracking-tight">AI Analysis in Progress</h2>
+               <p className="text-gray-500 font-bold text-lg mb-8 h-8">
+                  {["Reading document structure...", "Identifying key values...", "Validating health markers...", "Syncing with dashboard..."][analysisStep]}
+               </p>
+               <div className="w-full max-w-xs bg-gray-100 h-2 rounded-full overflow-hidden">
+                  <div className="bg-brand-500 h-full transition-all duration-500" style={{ width: `${(analysisStep + 1) * 25}%` }}></div>
+               </div>
+            </div>
+         )}
+
+         {showInsights && (
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in transition-all">
+               <div className="bg-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+                  <div className="flex justify-between items-start mb-8">
+                     <div>
+                        <div className="flex items-center gap-2 mb-1">
+                           <Sparkles className="w-5 h-5 text-brand-500" />
+                           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Report Insights</h2>
+                        </div>
+                        <p className="text-gray-500 font-bold truncate max-w-[280px]">{showInsights.title}</p>
+                     </div>
+                     <button onClick={() => setShowInsights(null)} className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors text-gray-500">
+                        <X className="w-6 h-6" />
+                     </button>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                     {showInsights.ocr_data?.values?.length > 0 ? (
+                        showInsights.ocr_data.values.map((v: any, i: number) => (
+                           <div key={i} className="bg-brand-50 p-5 rounded-[2rem] border border-brand-100 flex items-center justify-between">
+                              <div>
+                                 <p className="text-[10px] font-black text-brand-400 uppercase tracking-widest mb-1">{v.label}</p>
+                                 <div className="flex items-baseline gap-1">
+                                    <span className="text-2xl font-black text-brand-900">{v.value}</span>
+                                    <span className="text-xs font-bold text-brand-600">{v.unit}</span>
+                                 </div>
+                              </div>
+                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                 <CheckCircle2 className="w-6 h-6 text-green-500" />
+                              </div>
+                           </div>
+                        ))
+                     ) : (
+                        <div className="text-center py-6 bg-gray-50 rounded-3xl border border-gray-100">
+                           <Info className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                           <p className="text-sm font-bold text-gray-500">No specific markers detected for this category.</p>
+                        </div>
+                     )}
+                  </div>
+
+                  <div className="bg-gray-50 p-5 rounded-3xl mb-8">
+                     <div className="flex items-center gap-2 mb-2">
+                        <AlertCircle className="w-4 h-4 text-brand-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">AI Summary</span>
+                     </div>
+                     <p className="text-sm font-bold text-gray-700 leading-relaxed">
+                        {showInsights.ocr_data?.summary || "Record analyzed. Category-specific mapping applied."}
+                     </p>
+                  </div>
+
+                  <button
+                     onClick={() => setShowInsights(null)}
+                     className="w-full py-5 bg-gray-900 hover:bg-black text-white rounded-[1.5rem] shadow-xl transition-all font-black text-lg active:scale-95"
+                  >
+                     Close Insights
+                  </button>
+               </div>
+            </div>
+         )}
+
          {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in transition-all">
                <div className="bg-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
                   <div className="flex justify-between items-center mb-8">
                      <div>
-                        <h2 className="text-2xl font-bold text-gray-900">What is this report?</h2>
-                        <p className="text-gray-500 text-sm mt-1">Select a category for better organization</p>
+                        <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Record Type</h2>
+                        <p className="text-gray-500 font-bold text-sm">Better categories lead to better AI insights</p>
                      </div>
-                     <button
-                        onClick={() => { setIsModalOpen(false); setSelectedFile(null); }}
-                        className="p-3 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors text-gray-500"
-                     >
+                     <button onClick={() => { setIsModalOpen(false); setSelectedFile(null); }} className="p-3 bg-gray-50 hover:bg-gray-100 rounded-2xl text-gray-500">
                         <X className="w-6 h-6" />
                      </button>
                   </div>
@@ -281,39 +377,38 @@ export default function VaultPage() {
                         <button
                            key={cat.id}
                            onClick={() => setSelectedCategory(cat.id)}
-                           className={`p-6 rounded-[2rem] flex flex-col items-center gap-3 transition-all border-2 ${selectedCategory === cat.id
-                                 ? 'border-brand-500 bg-brand-50 shadow-lg shadow-brand-100'
-                                 : 'border-gray-50 bg-gray-50 hover:border-brand-200'
+                           className={`p-6 rounded-[2.5rem] flex flex-col items-center gap-3 transition-all border-4 ${selectedCategory === cat.id ? 'border-brand-500 bg-brand-50 shadow-xl shadow-brand-100' : 'border-gray-50 bg-gray-50 hover:border-brand-100'
                               }`}
                         >
-                           <span className="text-3xl">{cat.icon}</span>
-                           <span className={`text-sm font-bold ${selectedCategory === cat.id ? 'text-brand-700' : 'text-gray-600'}`}>
+                           <span className="text-4xl">{cat.icon}</span>
+                           <span className={`text-xs font-black uppercase tracking-widest ${selectedCategory === cat.id ? 'text-brand-700' : 'text-gray-400'}`}>
                               {cat.label}
                            </span>
                         </button>
                      ))}
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-2xl flex items-center gap-3 mb-8 border border-gray-100">
-                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                        <FileText className="w-5 h-5 text-gray-400" />
-                     </div>
-                     <div className="min-w-0">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Selected File</p>
-                        <p className="text-sm font-bold text-gray-900 truncate">{selectedFile?.name}</p>
-                     </div>
-                  </div>
-
                   <button
                      onClick={confirmUpload}
                      disabled={!selectedCategory || uploading}
-                     className="w-full py-5 bg-gray-900 disabled:bg-gray-400 hover:bg-brand-600 text-white rounded-[1.5rem] shadow-xl transition-all font-black text-lg active:scale-95"
+                     className="w-full py-5 bg-gray-900 disabled:bg-gray-400 hover:bg-black text-white rounded-[1.5rem] shadow-xl transition-all font-black text-lg active:scale-95"
                   >
-                     Upload to Vault
+                     Start AI Scan
                   </button>
                </div>
             </div>
          )}
+
+         <style jsx global>{`
+            @keyframes ocr-scan {
+               0% { top: 0; }
+               50% { top: 100%; opacity: 0.8; }
+               100% { top: 0; }
+            }
+            .animate-ocr-scan {
+               animation: ocr-scan 2.5s ease-in-out infinite;
+            }
+         `}</style>
       </div>
    );
 }

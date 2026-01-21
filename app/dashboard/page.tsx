@@ -137,6 +137,11 @@ export default function DashboardPage() {
     }
 
     fetchData();
+
+    // Refresh when returning to the tab
+    const handleFocus = () => setRefreshKey(k => k + 1);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [authUser, authLoading, refreshKey]);
 
   const getWeekStage = (week: number) => {
