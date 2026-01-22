@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, AlertTriangle, MessageSquare, Activity, Calendar, Search, Filter, CheckCircle, XCircle, Video, ArrowRight } from "lucide-react";
+import { Users, AlertTriangle, MessageSquare, Activity, Calendar, Search, Filter, CheckCircle, XCircle, Video, ArrowRight, LogOut, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -28,7 +28,7 @@ interface Request {
 }
 
 export default function DoctorDashboard() {
-    const { user, role, loading } = useAuth();
+    const { user, role, loading, signOut } = useAuth();
     const router = useRouter();
     const [stats, setStats] = useState({
         activePatients: 0,
@@ -124,13 +124,30 @@ export default function DoctorDashboard() {
                         <MessageSquare className="w-5 h-5 text-slate-500" />
                         <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                     </Link>
-                    <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                    <div className="flex items-center gap-3 pl-4 border-l border-slate-200 relative group">
                         <div className="text-right hidden sm:block">
                             <div className="text-sm font-bold text-slate-900 leading-tight">{user?.user_metadata.full_name}</div>
                             <div className="text-xs text-slate-500">{user?.user_metadata.specialization || 'Specialist'}</div>
                         </div>
-                         <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold">
+                         
+                         {/* User Menu Trigger */}
+                         <button className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold hover:bg-emerald-200 transition-colors focus:ring-2 focus:ring-emerald-500/20 outline-none">
                             {user?.user_metadata.full_name?.[0] || 'D'}
+                        </button>
+
+                        {/* Dropdown Menu - Fixed Hover Tunnel with Padding Bridge */}
+                        <div className="absolute right-0 top-full pt-2 w-48 hidden group-hover:block z-50">
+                            <div className="bg-white rounded-xl shadow-xl border border-slate-100 p-2 animate-in slide-in-from-top-2">
+                                <Link href="/doctor/profile" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">
+                                    <User className="w-4 h-4" /> Edit Profile
+                                </Link>
+                                <button 
+                                    onClick={() => signOut()}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
+                                >
+                                    <LogOut className="w-4 h-4" /> Logout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

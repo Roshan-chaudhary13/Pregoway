@@ -7,7 +7,10 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function PatientDetailsPage() {
+    const { user } = useAuth();
     const { id } = useParams();
     const router = useRouter();
     const [patient, setPatient] = useState<any>(null);
@@ -59,10 +62,14 @@ export default function PatientDetailsPage() {
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 font-medium">
+                        <Link href="/doctor/messages" className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 font-medium transition-colors">
                             <MessageCircle className="w-4 h-4" /> Message
-                        </button>
-                        <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
+                        </Link>
+                        <button 
+                            onClick={() => window.open(`https://meet.jit.si/pregoway-${user!.id}-${id}`, '_blank')}
+                            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors tooltip"
+                            title="Start Call"
+                        >
                             <Phone className="w-4 h-4" />
                         </button>
                     </div>

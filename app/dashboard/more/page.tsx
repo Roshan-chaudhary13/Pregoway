@@ -80,15 +80,7 @@ export default function MorePage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3 mt-6">
-          <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-sky-600 to-brand-600 text-white py-3 rounded-2xl font-bold text-sm shadow-lg shadow-sky-200 active:scale-95 transition-transform">
-            <Star className="w-4 h-4 fill-white" /> Upgrade Plan
-          </button>
-          <button className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-600 py-3 rounded-2xl font-bold text-sm hover:bg-gray-50 transition-colors">
-            <Bell className="w-4 h-4" /> Notifications
-          </button>
-        </div>
+
       </div>
 
       <div className="p-6 space-y-8">
