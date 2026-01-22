@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, ClipboardCheck, Calendar, FileText, User } from "lucide-react";
+import { Home, ClipboardCheck, Calendar, FileText, User, Sparkles, Grid } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
@@ -54,13 +54,15 @@ export default function DashboardLayout({
         {children}
       </main>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50">
-        <NavLink href="/dashboard" icon={<Home className="w-6 h-6" />} label="Home" active={pathname === '/dashboard'} />
-        <NavLink href="/dashboard/checkin" icon={<ClipboardCheck className="w-6 h-6" />} label="Check-In" active={pathname.startsWith('/dashboard/checkin')} />
-        <NavLink href="/dashboard/timeline" icon={<Calendar className="w-6 h-6" />} label="Timeline" active={pathname.startsWith('/dashboard/timeline')} />
-        <NavLink href="/dashboard/vault" icon={<FileText className="w-6 h-6" />} label="Docs" active={pathname.startsWith('/dashboard/vault')} />
-        <NavLink href="/dashboard/more" icon={<User className="w-6 h-6" />} label="More" active={pathname.startsWith('/dashboard/more')} />
+      {/* Fixed Bottom Glass Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-t border-gray-200/50 pb-4 pt-3 lg:pb-3">
+        <div className="flex justify-around items-center px-6 max-w-lg mx-auto w-full">
+          <NavLink href="/dashboard" icon={<Home className="w-6 h-6" />} label="Home" active={pathname === '/dashboard'} />
+          <NavLink href="/dashboard/checkin" icon={<ClipboardCheck className="w-6 h-6" />} label="Check-In" active={pathname.startsWith('/dashboard/checkin')} />
+          <NavLink href="/dashboard/timeline" icon={<Calendar className="w-6 h-6" />} label="Timeline" active={pathname.startsWith('/dashboard/timeline')} />
+          <NavLink href="/dashboard/vault" icon={<FileText className="w-6 h-6" />} label="Vault" active={pathname.startsWith('/dashboard/vault')} />
+          <NavLink href="/dashboard/more" icon={<Grid className="w-6 h-6" />} label="More" active={pathname.startsWith('/dashboard/more')} />
+        </div>
       </div>
 
       <AIChatBot />

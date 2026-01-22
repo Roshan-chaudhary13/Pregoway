@@ -47,6 +47,7 @@ export default function SettingsPage() {
                         </label>
                     </div>
 
+
                     <div className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="bg-purple-100 p-2 rounded-lg">
@@ -58,6 +59,20 @@ export default function SettingsPage() {
                             <input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} className="sr-only peer" />
                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                         </label>
+                    </div>
+
+                    {/* Language Settings - using Global Widget */}
+                    <div className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-orange-100 p-2 rounded-lg">
+                                <span className="font-bold text-orange-600 w-5 h-5 flex items-center justify-center text-xs">文</span>
+                            </div>
+                            <div>
+                                <span className="font-medium text-gray-900 block">Language</span>
+                                <span className="text-xs text-gray-400">Select your preferred language</span>
+                            </div>
+                        </div>
+                        <div id="language-switcher-target"></div>
                     </div>
 
                 </div>

@@ -33,23 +33,34 @@ export default function LoginPage() {
     return (
         <div className="flex min-h-screen bg-white">
             {/* Visual Side (Hidden on Mobile) */}
-            <div className="hidden lg:flex flex-col justify-between w-1/2 bg-brand-50 p-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+            {/* Visual Side (Hidden on Mobile) */}
+            <div className="hidden lg:flex flex-col justify-between w-1/2 relative overflow-hidden text-white p-12">
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/images/hero.png"
+                        alt="Hopeful pregnant woman"
+                        className="w-full h-full object-cover brightness-[0.7]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40"></div>
+                </div>
 
-                <div className="z-10">
-                    <Link href="/" className="flex items-center gap-2 text-brand-700 font-bold text-xl">
-                        <Heart className="fill-brand-700" /> Pregoway
+                <div className="z-10 relative">
+                    <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:text-brand-200 transition-colors">
+                        <Heart className="fill-brand-500 text-brand-500" /> Pregoway
                     </Link>
                 </div>
 
-                <div className="z-10 max-w-lg">
-                    <h2 className="text-4xl font-bold text-gray-900 mb-6">Welcome back to your journey.</h2>
-                    <p className="text-lg text-gray-600">Your health insights and daily tracker are ready for you. Let's see how baby is doing today.</p>
+                <div className="z-10 relative max-w-lg mb-8">
+                    <div className="inline-block px-3 py-1 mb-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 text-xs font-medium tracking-wide">
+                        WELCOME BACK
+                    </div>
+                    <h2 className="text-4xl font-bold mb-4 leading-tight">Hope is waking up to a new possibility.</h2>
+                    <p className="text-lg text-gray-200 font-light">Continue your journey with us. Every day is a step closer to meeting your little miracle.</p>
                 </div>
 
-                <div className="text-sm text-brand-800/60 z-10">
-                    © 2026 Pregoway Inc.
+                <div className="text-xs text-white/40 z-10 relative">
+                    © 2026 Pregoway Inc. • Saving Lives, Two at a Time.
                 </div>
             </div>
 

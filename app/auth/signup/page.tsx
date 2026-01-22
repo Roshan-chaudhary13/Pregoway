@@ -62,23 +62,37 @@ export default function SignUpPage() {
     return (
         <div className="flex min-h-screen bg-white">
             {/* Visual Side (Hidden on Mobile) */}
-            <div className="hidden lg:flex flex-col justify-between w-1/2 bg-gray-900 p-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            {/* Visual Side (Hidden on Mobile) */}
+            <div className="hidden lg:flex flex-col justify-between w-1/2 relative overflow-hidden text-white p-12">
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/images/rural.png"
+                        alt="Rural healthcare connection"
+                        className="w-full h-full object-cover brightness-[0.7]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-gray-900/30"></div>
+                </div>
 
-                <div className="z-10">
-                    <Link href="/" className="flex items-center gap-2 text-white font-bold text-xl">
+                <div className="z-10 relative">
+                    <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:text-brand-200 transition-colors">
                         <Heart className="fill-brand-500 text-brand-500" /> Pregoway
                     </Link>
                 </div>
 
-                <div className="z-10 max-w-lg">
-                    <h2 className="text-4xl font-bold text-white mb-6">Start your journey with confidence.</h2>
-                    <p className="text-lg text-gray-400">Join thousands of expecting mothers trusting AI to monitor their health and baby's growth.</p>
+                <div className="z-10 relative max-w-lg mb-8">
+                    <div className="inline-block px-3 py-1 mb-4 rounded-full bg-brand-500/20 backdrop-blur-md border border-brand-500/30 text-brand-300 text-xs font-bold tracking-wide">
+                        JOIN THE MOVEMENT
+                    </div>
+                    <h2 className="text-4xl font-bold mb-4 leading-tight">No distance is too far for care.</h2>
+                    <p className="text-lg text-gray-300 font-light">
+                        Join thousands of mothers connecting to life-saving insights.
+                        Whether in a city or a village, your safe journey starts here.
+                    </p>
                 </div>
 
-                <div className="text-sm text-gray-500 z-10">
-                    © 2026 Pregoway Inc.
+                <div className="text-xs text-white/40 z-10 relative">
+                    © 2026 Pregoway Inc. • Saving Lives, Two at a Time.
                 </div>
             </div>
 

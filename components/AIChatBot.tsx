@@ -11,14 +11,6 @@ type Message = {
     timestamp: Date;
 };
 
-const MOCK_RESPONSES = [
-    "That's a common symptom! Try drinking more water and getting rest.",
-    "Based on your 20th week, this is perfectly normal. Your baby is the size of a banana!",
-    "I'm just a demo AI, but I'd suggest consulting your doctor for specific medical advice.",
-    "Great job on logging your stats! keeping track is half the battle.",
-    "Have you done your kick counts today? It's important to monitor activity."
-];
-
 export default function AIChatBot() {
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
@@ -39,18 +31,34 @@ export default function AIChatBot() {
         e.preventDefault();
         if (!input.trim()) return;
 
-        const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input, timestamp: new Date() };
+        const userText = input;
+        const userMsg: Message = { id: Date.now().toString(), role: 'user', text: userText, timestamp: new Date() };
         setMessages(prev => [...prev, userMsg]);
         setInput("");
         setIsTyping(true);
 
-        // Mock AI delay
-        setTimeout(() => {
-            const randomResponse = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)];
-            const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'ai', text: randomResponse, timestamp: new Date() };
+        try {
+            // Prepare history for context
+            const history = messages.map(m => ({
+                role: m.role === 'ai' ? 'model' : 'user',
+                parts: m.text
+            })) as { role: 'model' | 'user', parts: string }[];
+
+            // Dynamic import to avoid client-side issues with server actions if strictly typed or bundled weirdly
+            // But usually, standard import works. Let's try standard import at top level if it were not client component.
+            // Since it is client component, we can import server action.
+            const { chatWithGemini } = await import("@/app/actions/ai");
+            const responseText = await chatWithGemini(userText, history);
+
+            const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'ai', text: responseText, timestamp: new Date() };
             setMessages(prev => [...prev, aiMsg]);
+        } catch (error) {
+            console.error("Chat error:", error);
+            const errorMsg: Message = { id: (Date.now() + 1).toString(), role: 'ai', text: "Sorry, I'm having trouble connecting right now.", timestamp: new Date() };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     if (!isOpen) {

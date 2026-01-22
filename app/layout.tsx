@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/context/AuthContext";
+import GoogleTranslate from "@/components/GoogleTranslate";
 
 export default function RootLayout({
   children,
@@ -27,6 +28,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <GoogleTranslate />
         </AuthProvider>
       </body>
     </html>
