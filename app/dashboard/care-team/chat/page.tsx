@@ -173,15 +173,36 @@ export default function PatientChatPage() {
                 
                 {messages.map(msg => {
                     const isMe = msg.sender_id === user!.id;
+                    const isCallMsg = msg.message.startsWith("📞");
+
                     return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
-                                isMe 
-                                ? 'bg-brand-600 text-white rounded-br-none' 
-                                : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
-                            }`}>
-                                {msg.message}
-                            </div>
+                             {isCallMsg ? (
+                                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex flex-col items-center gap-2 shadow-sm my-2">
+                                    <div className="flex items-center gap-2 text-emerald-800 font-bold">
+                                        <Video className="w-5 h-5 animate-pulse" /> {isMe ? 'You started a call' : 'Doctor started a call'}
+                                    </div>
+                                    {!isMe && (
+                                        <button 
+                                            onClick={() => {
+                                                const roomName = `pregoway-${doctor.id}-${user!.id}`;
+                                                window.open(`https://meet.jit.si/${roomName}`, '_blank');
+                                            }}
+                                            className="px-6 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors shadow-lg"
+                                        >
+                                            Join Video Call
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                                    isMe 
+                                    ? 'bg-brand-600 text-white rounded-br-none' 
+                                    : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+                                }`}>
+                                    {msg.message}
+                                </div>
+                            )}
                         </div>
                     )
                 })}

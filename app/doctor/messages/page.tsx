@@ -133,6 +133,36 @@ export default function DoctorChatPage() {
 
     const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
+    const startCall = async (type: 'video' | 'audio') => {
+        if (!selectedPatientId) return;
+        const roomName = `pregoway-${user!.id}-${selectedPatientId}`;
+        const callUrl = `https://meet.jit.si/${roomName}`;
+        
+        // 1. Open Call
+        window.open(callUrl, '_blank');
+
+        // 2. Send "Call Started" Notification to Chat
+        const msgContent = `📞 Started a ${type} call. Click to join.`;
+        
+        // Optimistic
+         const optimisticMsg: Message = {
+            id: 'temp-' + Date.now(),
+            sender_id: user!.id,
+            message: msgContent,
+            created_at: new Date().toISOString(),
+            is_read: false
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
+        scrollToBottom();
+
+        await supabase.from('consultations').insert({
+            doctor_id: user!.id,
+            patient_id: selectedPatientId,
+            sender_id: user!.id,
+            message: msgContent
+        });
+    };
+
     return (
         <div className="flex h-screen bg-slate-50 border-r border-slate-200">
             {/* Sidebar List */}
@@ -188,14 +218,14 @@ export default function DoctorChatPage() {
                             </div>
                             <div className="flex gap-2">
                                 <button 
-                                    onClick={() => window.open(`https://meet.jit.si/pregoway-${user!.id}-${selectedPatientId}`, '_blank')}
+                                    onClick={() => startCall('audio')}
                                     className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-full transition-colors tooltip"
                                     title="Start Audio Call"
                                 >
                                     <Phone className="w-5 h-5" />
                                 </button>
                                 <button 
-                                    onClick={() => window.open(`https://meet.jit.si/pregoway-${user!.id}-${selectedPatientId}`, '_blank')}
+                                    onClick={() => startCall('video')}
                                     className="p-2.5 text-white bg-emerald-600 hover:bg-emerald-700 rounded-full transition-colors shadow-md shadow-emerald-200"
                                     title="Start Video Call"
                                 >
@@ -215,15 +245,34 @@ export default function DoctorChatPage() {
                             ) : (
                                 messages.map(msg => {
                                     const isMe = msg.sender_id === user!.id;
+                                    const isCallMsg = msg.message.startsWith("📞");
+                                    
                                     return (
                                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-                                                isMe 
-                                                ? 'bg-slate-900 text-white rounded-br-none' 
-                                                : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-sm'
-                                            }`}>
-                                                {msg.message}
-                                            </div>
+                                            {isCallMsg ? (
+                                                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex flex-col items-center gap-2 shadow-sm">
+                                                    <div className="flex items-center gap-2 text-emerald-800 font-bold">
+                                                        <Video className="w-5 h-5 animate-pulse" /> Incoming Call
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const roomName = `pregoway-${user!.id}-${selectedPatientId}`;
+                                                            window.open(`https://meet.jit.si/${roomName}`, '_blank');
+                                                        }}
+                                                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors shadow"
+                                                    >
+                                                        Join Call
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                                                    isMe 
+                                                    ? 'bg-slate-900 text-white rounded-br-none' 
+                                                    : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-sm'
+                                                }`}>
+                                                    {msg.message}
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })
