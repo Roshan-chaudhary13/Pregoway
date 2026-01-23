@@ -90,10 +90,11 @@ export default function GoogleTranslate() {
                 // Fallback: Float it if no target found
                 document.body.appendChild(source);
                 source.style.position = 'fixed';
-                source.style.bottom = '20px';
-                source.style.left = '20px'; // Moved to bottom-left to verify UI clearance
-                source.style.right = 'auto';
-                source.style.zIndex = '9999';
+                source.style.top = '24px';
+                source.style.right = '24px';
+                source.style.left = 'auto';
+                source.style.bottom = 'auto';
+                source.style.zIndex = '10000';
                 source.style.display = 'inline-flex';
             }
         };
@@ -231,6 +232,13 @@ export default function GoogleTranslate() {
             margin-top: 8px !important;
         }
 
+        /* 6. Mobile Responsiveness */
+        @media (max-width: 768px) {
+            #google_translate_element .goog-te-gadget-simple {
+                height: 36px !important;
+                padding: 6px 10px !important;
+            }
+        }
       `}</style>
         </>
     );

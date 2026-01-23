@@ -13,6 +13,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ data: { user: User | null; session: Session | null }; error: any }>;
   signUp: (email: string, password: string, metadata?: any) => Promise<{ data: { user: User | null; session: Session | null }; error: any }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ data: any; error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ data: { user: null, session: null }, error: null }),
   signUp: async () => ({ data: { user: null, session: null }, error: null }),
   signOut: async () => { },
+  resetPassword: async () => ({ data: null, error: null }),
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -41,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .select('id')
       .eq('id', userId)
       .single();
-    
+
     if (doctor) {
       setRole('doctor');
     } else {
@@ -103,8 +105,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/auth/login");
   };
 
+  const resetPassword = async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    });
+    return { data, error };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, loading, signIn, signUp, signOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  Activity, 
-  Globe, 
-  Map, 
-  ShieldCheck, 
-  Twitter, 
-  Facebook, 
-  Instagram, 
-  Mail, 
+import {
+  Activity,
+  Globe,
+  Map,
+  ShieldCheck,
+  Twitter,
+  Facebook,
+  Instagram,
+  Mail,
   Phone,
   ArrowRight,
   Heart
@@ -41,7 +41,7 @@ function LandingContent() {
 
   return (
     <div className="flex flex-col min-h-screen font-sans text-gray-900 bg-white overflow-x-hidden">
-      
+
       {/* Hero Section */}
       <Hero />
 
@@ -51,9 +51,9 @@ function LandingContent() {
 
       {/* --- FEATURES / SOLUTION (Bento Grid) --- */}
       <section className="py-24 bg-gray-50 relative">
-         {/* Background pattern */}
-         <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#4d5d53_1px,transparent_1px)] [background-size:16px_16px]"></div>
-         
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#4d5d53_1px,transparent_1px)] [background-size:16px_16px]"></div>
+
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <ScrollReveal animation="fade">
             <div className="text-center max-w-3xl mx-auto mb-16">
@@ -66,28 +66,28 @@ function LandingContent() {
             <BentoGridItem
               title="The Proper Roadmap"
               description="Confusion is dangerous. We provide a week-by-week, step-by-step medical and nutritional roadmap tailored to your specific needs."
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-brand-100 to-brand-50" />}
+              header={<div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-brand-100 to-brand-50"><Map className="w-16 h-16 text-brand-500 opacity-60" /></div>}
               icon={<Map className="h-6 w-6 text-brand-600" />}
               className="md:col-span-1"
             />
             <BentoGridItem
               title="AI Risk Detection"
               description="Early detection saves lives. Our AI analyzes your vitals to flag potential complications weeks before they become emergencies."
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-accent-100 to-accent-50" />}
+              header={<div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-accent-100 to-accent-50"><Activity className="w-16 h-16 text-accent-500 opacity-60" /></div>}
               icon={<Activity className="h-6 w-6 text-accent-600" />}
               className="md:col-span-1"
             />
             <BentoGridItem
               title="Universal Access"
               description="Language shouldn&apos;t be a barrier. Available in all major Indian languages, making expert care accessible to every mother."
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-purple-100 to-purple-50" />}
+              header={<div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-purple-50"><Globe className="w-16 h-16 text-purple-500 opacity-60" /></div>}
               icon={<Globe className="h-6 w-6 text-purple-600" />}
               className="md:col-span-1"
             />
-             <BentoGridItem
+            <BentoGridItem
               title="Community Support"
               description="Connect with other mothers and experts. Share stories, get advice, and feel supported."
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-orange-100 to-orange-50" />}
+              header={<div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-orange-50"><Heart className="w-16 h-16 text-orange-500 opacity-60" /></div>}
               icon={<Heart className="h-6 w-6 text-orange-600" />}
               className="md:col-span-3"
             />

@@ -21,7 +21,7 @@ export default function DoctorLoginPage() {
 
         try {
             const { error } = await signIn(email, password);
-             if (error) {
+            if (error) {
                 if (error.message.includes("Invalid login credentials")) {
                     throw new Error("Incorrect email or password.");
                 }
@@ -43,7 +43,7 @@ export default function DoctorLoginPage() {
             <div className="hidden lg:flex flex-col justify-between w-1/2 relative overflow-hidden text-white p-12 bg-slate-900">
                 <div className="absolute inset-0 z-0">
                     <img
-                         src="https://images.unsplash.com/photo-1551076882-68b47d73d8d1?q=80&w=2670&auto=format&fit=crop"
+                        src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=2670&auto=format&fit=crop"
                         alt="Medical Professional"
                         className="w-full h-full object-cover brightness-[0.4]"
                     />
@@ -69,12 +69,16 @@ export default function DoctorLoginPage() {
             </div>
 
             {/* Form Side */}
-            <div className="flex-1 flex flex-col justify-center p-6 sm:p-12 lg:p-24">
+            <div className="flex-1 flex flex-col justify-center p-6 sm:p-12 lg:p-24 relative">
+                <Link href="/" className="absolute top-6 left-6 text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 rotate-180" />
+                    <span className="text-sm font-medium">Back</span>
+                </Link>
                 <div className="w-full max-w-md mx-auto space-y-8">
                     <div className="text-center lg:text-left">
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Doctor Portal Login</h1>
                         <p className="mt-2 text-slate-500">
-                           New medical partner?{" "}
+                            New medical partner?{" "}
                             <Link href="/doctor/auth/signup" className="text-emerald-600 hover:text-emerald-700 font-semibold hover:underline">
                                 Apply for access
                             </Link>
@@ -101,6 +105,7 @@ export default function DoctorLoginPage() {
                                         onChange={e => setEmail(e.target.value)}
                                         className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
                                         placeholder="dr.name@hospital.org"
+                                        suppressHydrationWarning
                                     />
                                 </div>
                             </div>
@@ -118,6 +123,7 @@ export default function DoctorLoginPage() {
                                         onChange={e => setPassword(e.target.value)}
                                         className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
                                         placeholder="••••••••"
+                                        suppressHydrationWarning
                                     />
                                 </div>
                             </div>
@@ -127,6 +133,7 @@ export default function DoctorLoginPage() {
                             type="submit"
                             disabled={loading}
                             className="w-full flex items-center justify-center gap-2 py-4 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white rounded-xl font-bold shadow-lg transition-all active:scale-[0.98]"
+                            suppressHydrationWarning
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

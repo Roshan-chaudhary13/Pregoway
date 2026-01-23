@@ -25,7 +25,7 @@ export function Hero() {
             <span>Saving Two Lives at Once</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 tracking-tight leading-[1.1]">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 tracking-tight leading-[1.1] mb-6">
             Every Mother <br />
             Deserves a <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-accent-500">
@@ -34,7 +34,7 @@ export function Hero() {
           </h1>
 
           <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
-            Bridging the gap between rural challenges and modern care. 
+            Bridging the gap between rural challenges and modern care.
             Improper management shouldn&apos;t cost a life. We provide the roadmap, resources, and hope you need.
           </p>
 
@@ -53,41 +53,41 @@ export function Hero() {
               Log In
             </Link>
           </div>
-          
-           {/* Trust Indicators */}
-           <div className="pt-8 border-t border-gray-200/60">
-              <p className="text-sm text-gray-500 mb-4">Trusted by mothers across the nation</p>
-              <div className="flex -space-x-4">
-                  {[1,2,3,4].map((i) => (
-                      <div key={i} className={`w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 bg-[url('https://i.pravatar.cc/100?img=${i+10}')] bg-center bg-cover`}>
-                      </div>
-                  ))}
-                  <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-500">
-                      +2k
-                  </div>
+
+          {/* Trust Indicators */}
+          <div className="pt-8 border-t border-gray-200/60">
+            <p className="text-sm text-gray-500 mb-4">Trusted by mothers across the nation</p>
+            <div className="flex -space-x-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className={`w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 bg-[url('https://i.pravatar.cc/100?img=${i + 10}')] bg-center bg-cover`}>
+                </div>
+              ))}
+              <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-500">
+                +2k
               </div>
-           </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Hero Image */}
         <motion.div
-           initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
-           animate={{ opacity: 1, scale: 1, rotate: 0 }}
-           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-           className="relative h-[600px] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white"
+          initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="relative h-[600px] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white"
         >
-             <img
+          <img
             src="/images/hero.png"
             alt="Hopeful pregnant woman"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-          
+
           <div className="absolute bottom-8 left-8 right-8 text-white">
-              <div className="bg-white/20 backdrop-blur-md p-6 rounded-2xl border border-white/20">
-                  <p className="font-medium text-lg mb-2">&quot;Pregoway gave me the confidence I needed.&quot;</p>
-                  <p className="text-sm opacity-80">- Gestational Health Tracking</p>
-              </div>
+            <div className="bg-white/20 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+              <p className="font-medium text-lg mb-2">&quot;Pregoway gave me the confidence I needed.&quot;</p>
+              <p className="text-sm opacity-80">- Gestational Health Tracking</p>
+            </div>
           </div>
         </motion.div>
       </div>

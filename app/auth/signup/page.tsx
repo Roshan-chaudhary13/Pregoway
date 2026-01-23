@@ -99,7 +99,11 @@ export default function SignUpPage() {
             </div>
 
             {/* Form Side */}
-            <div className="flex-1 flex flex-col justify-center p-6 sm:p-12 lg:p-24">
+            <div className="flex-1 flex flex-col justify-center p-6 sm:p-12 lg:p-24 relative">
+                <Link href="/" className="absolute top-6 left-6 text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 rotate-180" />
+                    <span className="text-sm font-medium">Back</span>
+                </Link>
                 <div className="w-full max-w-md mx-auto space-y-8">
                     <div className="text-center lg:text-left">
                         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Create Account</h1>
@@ -206,7 +210,7 @@ export default function SignUpPage() {
                     <p className="text-center text-xs text-gray-500 leading-relaxed">
                         By creating an account, you agree to our <Link href="#" className="underline">Terms of Service</Link> and <Link href="#" className="underline">Privacy Policy</Link>.
                     </p>
-                    
+
                     <div className="mt-8 text-center border-t border-gray-100 pt-6">
                         <p className="text-sm text-gray-500">
                             Are you a Medical Professional?{" "}
